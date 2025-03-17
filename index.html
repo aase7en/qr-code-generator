@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #qrcode {
+            text-align: center;
+            margin-top: 20px;
+            min-height: 200px;
+        }
+        #download-btn {
+            display: none;
+            margin-top: 20px;
+            background-color: #2ecc71;
+        }
+        #download-btn:hover {
+            background-color: #27ae60;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .option-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Generator</h1>
+    <div class="container">
+        <div>
+            <label for="text">ข้อความหรือ URL:</label>
+            <input type="text" id="text" placeholder="กรอกข้อความหรือ URL ที่ต้องการสร้าง QR Code">
+        </div>
+
+        <div class="options">
+            <div class="option-group">
+                <label for="size">ขนาด:</label>
+                <select id="size">
+                    <option value="128">128x128</option>
+                    <option value="256" selected>256x256</option>
+                    <option value="320">320x320</option>
+                    <option value="512">512x512</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="color">สี:</label>
+                <input type="color" id="color" value="#000000">
+            </div>
+
+            <div class="option-group">
+                <label for="background">สีพื้นหลัง:</label>
+                <input type="color" id="background" value="#ffffff">
+            </div>
+        </div>
+
+        <button id="generate-btn">สร้าง QR Code</button>
+        <div id="qrcode"></div>
+        <button id="download-btn">ดาวน์โหลด QR Code</button>
+    </div>
+    <div class="footer">
+        <p>เครื่องมือสร้าง QR Code ฟรี - ใช้งานง่าย เพียงใส่ข้อความหรือ URL และกดสร้าง</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const qrcodeDiv = document.getElementById('qrcode');
+            let qrcode = null;
+
+            generateBtn.addEventListener('click', function() {
+                const text = document.getElementById('text').value.trim();
+                if (!text) {
+                    alert('กรุณากรอกข้อความหรือ URL');
+                    return;
+                }
+
+                // ล้าง QR Code เดิม
+                qrcodeDiv.innerHTML = '';
+                
+                const size = parseInt(document.getElementById('size').value);
+                const color = document.getElementById('color').value;
+                const background = document.getElementById('background').value;
+
+                // สร้าง QR Code ใหม่
+                qrcode = new QRCode(qrcodeDiv, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: color,
+                    colorLight: background,
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // แสดงปุ่มดาวน์โหลด
+                downloadBtn.style.display = 'block';
+            });
+
+            downloadBtn.addEventListener('click', function() {
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (canvas) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = 'qrcode.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
