@@ -396,8 +396,7 @@
     </style>
 </head>
 <body>
-    <div class="api-notice" style="display: none;">ระบบกำลังทำงานในโหมด API สำหรับ AppSheet</div>
-    
+      
     <div id="api-mode-container" style="display: none;">
         <div id="qrcode-api"></div>
         <div id="error-container" style="display:none" class="error-message">
@@ -618,7 +617,7 @@
                 console.log("กำลังทำงานในโหมด API");
                 
                 document.body.classList.add('api-mode');
-                document.querySelector('.api-notice').style.display = 'block';
+                //document.querySelector('.api-notice').style.display = 'block';
                 document.getElementById('api-mode-container').style.display = 'flex';
                 document.querySelector('.container').style.display = 'none';
                 
