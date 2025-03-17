@@ -3,494 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator สำหรับ AppSheet</title>
+    <title>QR Code Generator API</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1, h2 {
-            color: #2c3e50;
-            text-align: center;
-        }
-        .container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            height: 100px;
-            font-family: monospace;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-            margin-right: 10px;
-        }
-        button:hover {
-            background-color: #2980b9;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
         #qrcode {
-            text-align: center;
-            margin: 20px 0;
-            min-height: 200px;
-        }
-        .url-display {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            margin-top: 20px;
-            word-break: break-all;
-            font-family: monospace;
-        }
-        .url-container {
-            margin-top: 20px;
-        }
-        .buttons {
-            margin-top: 20px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        #download-btn {
-            background-color: #2ecc71;
-        }
-        #download-btn:hover {
-            background-color: #27ae60;
-        }
-        #copy-btn {
-            background-color: #9b59b6;
-        }
-        #copy-btn:hover {
-            background-color: #8e44ad;
-        }
-        .options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .option-group {
-            flex: 1;
-            min-width: 200px;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            display: none;
-        }
-        .date-group {
-            display: flex;
-            gap: 10px;
-        }
-        .date-group input {
-            margin-bottom: 0;
-        }
-        .info-text {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .qr-preview {
-            text-align: center;
-        }
-        .data-url {
-            display: none;
-        }
-        .batch-controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        #github-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        #github-link a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        #github-link a:hover {
-            text-decoration: underline;
-        }
-        #base64-output {
-            margin-top: 15px;
-            max-height: 80px;
-            overflow-y: auto;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
     </style>
 </head>
 <body>
-    <h1>QR Code Generator สำหรับ AppSheet</h1>
-    
-    <div class="container">
-        <div>
-            <label for="text">ข้อความหรือ URL:</label>
-            <input type="text" id="text" placeholder="กรอกข้อความหรือ URL ที่ต้องการสร้าง QR Code">
-        </div>
-
-        <div class="options">
-            <div class="option-group">
-                <label for="size">ขนาด:</label>
-                <select id="size">
-                    <option value="128">128x128</option>
-                    <option value="256">256x256</option>
-                    <option value="350" selected>350x350</option>
-                    <option value="512">512x512</option>
-                </select>
-            </div>
-
-            <div class="option-group">
-                <label for="margin">ระยะขอบ:</label>
-                <input type="number" id="margin" value="1" min="0" max="5">
-            </div>
-
-            <div class="option-group">
-                <label for="color">สี QR Code:</label>
-                <input type="color" id="color" value="#000000">
-            </div>
-
-            <div class="option-group">
-                <label for="background">สีพื้นหลัง:</label>
-                <input type="color" id="background" value="#ffffff">
-            </div>
-        </div>
-
-        <div class="date-group">
-            <div class="option-group">
-                <label for="issue-date">วันที่ออก:</label>
-                <input type="date" id="issue-date">
-                <div class="info-text">ถ้าไม่ระบุ จะใช้วันที่ปัจจุบัน</div>
-            </div>
-            <div class="option-group">
-                <label for="expire-date">วันที่หมดอายุ:</label>
-                <input type="date" id="expire-date">
-                <div class="info-text">ถ้าไม่ระบุ จะกำหนดเป็น 3 ปีหลังจากวันที่ออก</div>
-            </div>
-        </div>
-
-        <button id="generate-btn">สร้าง QR Code</button>
-        
-        <div id="qrcode"></div>
-        
-        <h3 id="url-title" style="display: none;">URL สำหรับ AppSheet:</h3>
-        <div id="base64-output" class="url-display" style="display: none;"></div>
-        
-        <div class="buttons" style="display: none;" id="action-buttons">
-            <button id="copy-btn">คัดลอก URL</button>
-            <button id="download-btn">ดาวน์โหลด QR Code</button>
-        </div>
-        <div id="copy-success" class="success-message">คัดลอก URL สำเร็จ!</div>
-    </div>
-
-    <div class="container">
-        <h2>สร้าง QR Code จำนวนมาก</h2>
-        <div>
-            <label for="batch-text">ข้อความหลายรายการ (แต่ละรายการขึ้นบรรทัดใหม่):</label>
-            <textarea id="batch-text" placeholder="ข้อความบรรทัดที่ 1&#10;ข้อความบรรทัดที่ 2&#10;..."></textarea>
-        </div>
-        <button id="generate-batch-btn">สร้าง QR Code ทั้งหมด</button>
-        <div id="batch-result" style="margin-top: 20px;"></div>
-    </div>
-
-    <div id="github-link">
-        <p>คุณสามารถ <a href="https://github.com/new" target="_blank">สร้าง GitHub Repository</a> และอัพโหลดไฟล์นี้เป็น index.html เพื่อโฮสต์บน GitHub Pages</p>
-    </div>
-
-    <div class="footer">
-        <p>เครื่องมือสร้าง QR Code ฟรี - สร้าง QR Code เองได้โดยไม่ต้องใช้บริการภายนอก</p>
-        <p>พัฒนาโดย <a href="https://github.com/aase7en" target="_blank">aase7en</a> | <a href="https://github.com/aase7en/qr-code-generator" target="_blank">ดูโค้ดบน GitHub</a></p>
-    </div>
+    <div id="qrcode"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const generateBtn = document.getElementById('generate-btn');
-            const generateBatchBtn = document.getElementById('generate-batch-btn');
-            const downloadBtn = document.getElementById('download-btn');
-            const copyBtn = document.getElementById('copy-btn');
-            const actionButtons = document.getElementById('action-buttons');
-            const qrcodeDiv = document.getElementById('qrcode');
-            const urlTitle = document.getElementById('url-title');
-            const base64Output = document.getElementById('base64-output');
-            const copySuccess = document.getElementById('copy-success');
-            let qrCodeCanvas = null;
+        // ฟังก์ชันสำหรับอ่านค่าพารามิเตอร์จาก URL
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
 
-            // ตั้งค่าวันที่เริ่มต้น
-            const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
-            document.getElementById('issue-date').value = todayStr;
-            
-            // คำนวณวันหมดอายุเริ่มต้น (3 ปีจากวันนี้)
-            const expireDate = new Date();
-            expireDate.setFullYear(expireDate.getFullYear() + 3);
-            const expireDateStr = expireDate.toISOString().split('T')[0];
-            document.getElementById('expire-date').value = expireDateStr;
-
-            function formatDate(dateStr) {
-                if (!dateStr) return '';
-                const date = new Date(dateStr);
-                const day = date.getDate().toString().padStart(2, '0');
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const year = date.getFullYear().toString().slice(-2);
-                return `${day}/${month}/${year}`;
-            }
-
-            generateBtn.addEventListener('click', function() {
-                const text = document.getElementById('text').value.trim();
-                if (!text) {
-                    alert('กรุณากรอกข้อความหรือ URL');
-                    return;
-                }
-
-                // ล้าง QR Code เดิม
-                qrcodeDiv.innerHTML = '';
-                
-                const size = parseInt(document.getElementById('size').value);
-                const color = document.getElementById('color').value;
-                const background = document.getElementById('background').value;
-                const margin = parseInt(document.getElementById('margin').value);
-
-                // สร้าง QR Code ใหม่
-                new QRCode(qrcodeDiv, {
-                    text: text,
-                    width: size,
-                    height: size,
-                    colorDark: color,
-                    colorLight: background,
-                    correctLevel: QRCode.CorrectLevel.L,
-                    margin: margin
-                });
-
-                // รอให้ QR Code สร้างเสร็จ
-                setTimeout(() => {
-                    qrCodeCanvas = qrcodeDiv.querySelector('canvas');
-                    if (qrCodeCanvas) {
-                        // แปลง Canvas เป็น Base64 URL
-                        const dataUrl = qrCodeCanvas.toDataURL('image/png');
-                        base64Output.textContent = dataUrl;
-                        base64Output.style.display = 'block';
-                        urlTitle.style.display = 'block';
-                        actionButtons.style.display = 'flex';
-                    }
-                }, 100);
+        // อ่านค่าพารามิเตอร์ต่างๆ จาก URL
+        const text = getUrlParameter('text');
+        const size = parseInt(getUrlParameter('size')) || 350;
+        const margin = parseInt(getUrlParameter('margin')) || 1;
+        const dark = getUrlParameter('dark') || '#000000';
+        const light = getUrlParameter('light') || '#ffffff';
+        
+        // ถ้ามีการระบุข้อความ ให้สร้าง QR Code
+        if (text) {
+            new QRCode(document.getElementById("qrcode"), {
+                text: text,
+                width: size,
+                height: size,
+                colorDark: dark,
+                colorLight: light,
+                correctLevel: QRCode.CorrectLevel.H,
+                margin: margin
             });
-
-            generateBatchBtn.addEventListener('click', function() {
-                const batchText = document.getElementById('batch-text').value.trim();
-                if (!batchText) {
-                    alert('กรุณากรอกข้อความอย่างน้อย 1 รายการ');
-                    return;
-                }
-
-                const batchResult = document.getElementById('batch-result');
-                batchResult.innerHTML = '';
-
-                const size = parseInt(document.getElementById('size').value);
-                const color = document.getElementById('color').value;
-                const background = document.getElementById('background').value;
-                const issueDate = formatDate(document.getElementById('issue-date').value) || formatDate(todayStr);
-                const expireDate = formatDate(document.getElementById('expire-date').value) || formatDate(expireDateStr);
-
-                const lines = batchText.split('\n').filter(line => line.trim() !== '');
-                
-                // สร้างตาราง
-                const table = document.createElement('table');
-                
-                // สร้างส่วนหัวตาราง
-                const thead = document.createElement('thead');
-                const headerRow = document.createElement('tr');
-                
-                const headers = ['QR Code', 'ข้อความ', 'วันที่ออก', 'วันที่หมดอายุ', 'URL รูปภาพ', 'การจัดการ'];
-                headers.forEach(headerText => {
-                    const th = document.createElement('th');
-                    th.textContent = headerText;
-                    headerRow.appendChild(th);
-                });
-                
-                thead.appendChild(headerRow);
-                table.appendChild(thead);
-                
-                // สร้างส่วนเนื้อหาตาราง
-                const tbody = document.createElement('tbody');
-                
-                // สร้าง QR Code สำหรับแต่ละบรรทัด
-                lines.forEach((line, index) => {
-                    const row = document.createElement('tr');
-                    
-                    // สร้างเซลล์สำหรับ QR Code
-                    const qrCell = document.createElement('td');
-                    qrCell.className = 'qr-preview';
-                    const qrContainer = document.createElement('div');
-                    qrContainer.id = `qr-${index}`;
-                    qrCell.appendChild(qrContainer);
-                    row.appendChild(qrCell);
-                    
-                    // เซลล์สำหรับข้อความ
-                    const textCell = document.createElement('td');
-                    textCell.textContent = line;
-                    row.appendChild(textCell);
-                    
-                    // เซลล์สำหรับวันที่ออก
-                    const issueDateCell = document.createElement('td');
-                    issueDateCell.textContent = issueDate;
-                    row.appendChild(issueDateCell);
-                    
-                    // เซลล์สำหรับวันที่หมดอายุ
-                    const expireDateCell = document.createElement('td');
-                    expireDateCell.textContent = expireDate;
-                    row.appendChild(expireDateCell);
-                    
-                    // เซลล์สำหรับ Data URL
-                    const urlCell = document.createElement('td');
-                    urlCell.className = 'data-url';
-                    urlCell.id = `url-${index}`;
-                    row.appendChild(urlCell);
-                    
-                    // เซลล์สำหรับปุ่มดำเนินการ
-                    const actionCell = document.createElement('td');
-                    const copyBtn = document.createElement('button');
-                    copyBtn.textContent = 'คัดลอก URL';
-                    copyBtn.className = 'copy-batch-btn';
-                    copyBtn.dataset.index = index;
-                    
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.textContent = 'ดาวน์โหลด';
-                    downloadBtn.className = 'download-batch-btn';
-                    downloadBtn.dataset.index = index;
-                    
-                    actionCell.appendChild(copyBtn);
-                    actionCell.appendChild(downloadBtn);
-                    row.appendChild(actionCell);
-                    
-                    tbody.appendChild(row);
-                    
-                    // สร้าง QR Code
-                    new QRCode(qrContainer, {
-                        text: line,
-                        width: 100,
-                        height: 100,
-                        colorDark: color,
-                        colorLight: background,
-                        correctLevel: QRCode.CorrectLevel.L
-                    });
-                });
-                
-                table.appendChild(tbody);
-                batchResult.appendChild(table);
-                
-                // รอให้ QR Code ทั้งหมดสร้างเสร็จแล้วจึงดึง Data URL
-                setTimeout(() => {
-                    lines.forEach((_, index) => {
-                        const qrContainer = document.getElementById(`qr-${index}`);
-                        const urlCell = document.getElementById(`url-${index}`);
-                        
-                        const canvas = qrContainer.querySelector('canvas');
-                        if (canvas) {
-                            const dataUrl = canvas.toDataURL('image/png');
-                            urlCell.textContent = dataUrl;
-                        }
-                    });
-                    
-                    // เพิ่ม Event Listener สำหรับปุ่มคัดลอกและดาวน์โหลด
-                    document.querySelectorAll('.copy-batch-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const index = this.dataset.index;
-                            const dataUrl = document.getElementById(`url-${index}`).textContent;
-                            navigator.clipboard.writeText(dataUrl).then(() => {
-                                alert('คัดลอก URL สำเร็จ!');
-                            });
-                        });
-                    });
-                    
-                    document.querySelectorAll('.download-batch-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const index = this.dataset.index;
-                            const dataUrl = document.getElementById(`url-${index}`).textContent;
-                            const text = lines[index].substring(0, 10).replace(/[^a-z0-9]/gi, '_');
-                            
-                            const a = document.createElement('a');
-                            a.href = dataUrl;
-                            a.download = `qrcode_${text}.png`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                        });
-                    });
-                }, 500);
-            });
-
-            copyBtn.addEventListener('click', function() {
-                const dataUrl = base64Output.textContent;
-                navigator.clipboard.writeText(dataUrl).then(() => {
-                    copySuccess.style.display = 'block';
-                    setTimeout(() => {
-                        copySuccess.style.display = 'none';
-                    }, 2000);
-                });
-            });
-
-            downloadBtn.addEventListener('click', function() {
-                if (qrCodeCanvas) {
-                    const dataUrl = qrCodeCanvas.toDataURL('image/png');
-                    const text = document.getElementById('text').value.trim();
-                    const sanitizedText = text.substring(0, 10).replace(/[^a-z0-9]/gi, '_');
-                    
-                    const a = document.createElement('a');
-                    a.href = dataUrl;
-                    a.download = `qrcode_${sanitizedText}.png`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-            });
-        });
+        }
     </script>
 </body>
 </html>
