@@ -308,6 +308,38 @@
             display: none;
         }
         
+        .api-notice {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            color: #e53935;
+            text-align: center;
+            padding: 20px;
+            background-color: #ffebee;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin: 20px;
+        }
+        
+        .api-mode-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
         @media (max-width: 768px) {
             .main {
                 flex-direction: column;
@@ -364,8 +396,14 @@
     </style>
 </head>
 <body>
-    <div class="api-mode-notice">
-        <p>ระบบกำลังทำงานในโหมด API สำหรับ AppSheet</p>
+    <div class="api-notice" style="display: none;">ระบบกำลังทำงานในโหมด API สำหรับ AppSheet</div>
+    
+    <div id="api-mode-container" style="display: none;">
+        <div id="qrcode-api"></div>
+        <div id="error-container" style="display:none" class="error-message">
+            <p>ไม่พบข้อความสำหรับสร้าง QR Code กรุณาระบุพารามิเตอร์ text ในลิงก์</p>
+            <p>ตัวอย่าง: <code>?text=ข้อความที่ต้องการ</code></p>
+        </div>
     </div>
     
     <div class="container">
@@ -513,9 +551,9 @@
         }
         
         // ฟังก์ชันสำหรับการสร้าง QR Code
-        function generateQRCode(text, size, margin, dark, light) {
+        function generateQRCode(text, size, margin, dark, light, targetElement = "qrcode") {
             // ล้างค่าเดิม
-            const qrcodeDiv = document.getElementById("qrcode");
+            const qrcodeDiv = document.getElementById(targetElement);
             qrcodeDiv.innerHTML = '';
             
             // สร้าง QR Code ใหม่
@@ -529,14 +567,18 @@
                 margin: margin
             });
             
-            // ซ่อนข้อความว่าไม่มี QR Code
-            document.getElementById("no-qr-message").style.display = "none";
+            if (targetElement === "qrcode") {
+                // ซ่อนข้อความว่าไม่มี QR Code
+                document.getElementById("no-qr-message").style.display = "none";
+                
+                // แสดงปุ่มดำเนินการ
+                document.getElementById("action-buttons").style.display = "flex";
+                
+                // อัปเดต Data URL สำหรับ tab ที่ 2
+                setTimeout(updateDataUrl, 100);
+            }
             
-            // แสดงปุ่มดำเนินการ
-            document.getElementById("action-buttons").style.display = "flex";
-            
-            // อัปเดต Data URL สำหรับ tab ที่ 2
-            setTimeout(updateDataUrl, 100);
+            console.log(`QR Code สร้างเสร็จแล้ว (${targetElement})`);
         }
         
         // ฟังก์ชันสำหรับอัปเดต Data URL
@@ -569,10 +611,16 @@
         
         // เมื่อหน้าเว็บโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("เว็บไซต์โหลดเสร็จแล้ว");
+            
             // ตรวจสอบว่าเป็นโหมด API หรือไม่
             if (isApiMode()) {
+                console.log("กำลังทำงานในโหมด API");
+                
                 document.body.classList.add('api-mode');
-                document.querySelector('.api-mode-notice').style.display = 'block';
+                document.querySelector('.api-notice').style.display = 'block';
+                document.getElementById('api-mode-container').style.display = 'flex';
+                document.querySelector('.container').style.display = 'none';
                 
                 // อ่านค่าพารามิเตอร์ต่างๆ จาก URL
                 const text = getUrlParameter('text');
@@ -581,12 +629,23 @@
                 const dark = getUrlParameter('dark') || '#000000';
                 const light = getUrlParameter('light') || '#ffffff';
                 
-                // ถ้ามีการระบุข้อความ ให้สร้าง QR Code
-                if (text) {
-                    generateQRCode(text, size, margin, dark, light);
+                console.log("ข้อมูลที่ได้รับ:", {text, size, margin, dark, light});
+                
+                // ถ้ามีการระบุข้อความที่ไม่ใช่ [Row ID] ให้สร้าง QR Code
+                if (text && text !== '[Row ID]') {
+                    try {
+                        generateQRCode(text, size, margin, dark, light, "qrcode-api");
+                    } catch (error) {
+                        console.error("เกิดข้อผิดพลาดในการสร้าง QR Code:", error);
+                        document.getElementById('error-container').style.display = 'block';
+                    }
+                } else {
+                    // ไม่มีข้อความหรือเป็น [Row ID] แสดงข้อความแจ้งเตือน
+                    console.log("ไม่พบข้อความสำหรับสร้าง QR Code");
+                    document.getElementById('error-container').style.display = 'block';
                 }
             } else {
-                // เชื่อมต่อ event listeners สำหรับโหมดเว็บปกติ
+                console.log("กำลังทำงานในโหมดเว็บปกติ");
                 
                 // เชื่อมต่อ color picker กับ input text
                 document.getElementById('dark-color').addEventListener('input', function() {
@@ -665,25 +724,25 @@
                     });
                 });
                 
-                // Copy buttons functionality
-                document.querySelectorAll('.copy-btn').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const targetId = this.getAttribute('data-target');
-                        const text = document.getElementById(targetId).textContent;
-                        
-                        navigator.clipboard.writeText(text).then(() => {
-                            // ให้ feedback ว่าคัดลอกสำเร็จ
-                            const originalText = this.innerHTML;
-                            this.innerHTML = '<i class="fas fa-check"></i> คัดลอกแล้ว';
-                            
-                            setTimeout(() => {
-                                this.innerHTML = originalText;
-                            }, 2000);
+                        // Copy buttons functionality
+                        document.querySelectorAll('.copy-btn').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const targetId = this.getAttribute('data-target');
+                                const text = document.getElementById(targetId).textContent;
+        
+                                navigator.clipboard.writeText(text).then(() => {
+                                    // ให้ feedback ว่าคัดลอกสำเร็จ
+                                    const originalText = this.innerHTML;
+                                    this.innerHTML = '<i class="fas fa-check"></i> คัดลอกแล้ว';
+            
+                                    setTimeout(() => {
+                                    this.innerHTML = originalText;
+                                    }, 2000);
+                                });
+                            });
                         });
-                    });
-                });
-            }
-        });
-    </script>
+                    }
+            });
+        </script>
 </body>
 </html>
