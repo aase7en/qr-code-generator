@@ -3,26 +3,507 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator API</title>
+    <title>QR Code Generator สำหรับ AppSheet</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔄</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #9b59b6;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #1abc9c;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        
+        .main {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .qr-generator, .qr-display, .api-info {
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+        
+        .qr-generator {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .qr-display {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .api-info {
+            flex-basis: 100%;
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+        }
+        
+        .color-picker {
+            display: flex;
+            align-items: center;
+        }
+        
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 40px;
+            padding: 2px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .color-picker input[type="text"] {
+            flex: 1;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            transition: var(--transition);
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+        
+        .btn-accent:hover {
+            background-color: #8e44ad;
+        }
+        
+        .btn-icon {
+            margin-right: 8px;
+        }
+        
+        #qrcode {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+        
+        .api-url {
+            background-color: #f7f9fc;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: var(--light-color);
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+        
+        .copy-btn:hover {
+            background-color: #ddd;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .success-message {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+        }
+        
+        .section-title {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            font-size: 1.5rem;
+        }
+        
+        .code-block {
+            background-color: #f7f9fc;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .no-qr-message {
+            text-align: center;
+            color: #888;
+            margin: 20px 0;
+            font-style: italic;
+        }
+        
+        .api-mode-notice {
+            text-align: center;
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main {
+                flex-direction: column;
+            }
+            
+            .qr-generator, .qr-display {
+                min-width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        /* API Mode Styles */
+        body.api-mode {
+            background-color: transparent;
             margin: 0;
             padding: 0;
             overflow: hidden;
         }
-        #qrcode {
+        
+        body.api-mode .container,
+        body.api-mode .header,
+        body.api-mode .qr-generator,
+        body.api-mode .api-info,
+        body.api-mode .footer {
+            display: none;
+        }
+        
+        body.api-mode .main {
+            padding: 0;
+            margin: 0;
+        }
+        
+        body.api-mode .qr-display {
+            box-shadow: none;
+            background-color: transparent;
+            width: 100%;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+        }
+        
+        body.api-mode #qrcode {
+            background-color: transparent;
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
-    <div id="qrcode"></div>
-
+    <div class="api-mode-notice">
+        <p>ระบบกำลังทำงานในโหมด API สำหรับ AppSheet</p>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>QR Code Generator สำหรับ AppSheet</h1>
+            <p>สร้าง QR Code ที่สามารถใช้งานร่วมกับ AppSheet ได้อย่างง่ายดาย</p>
+        </div>
+        
+        <div class="main">
+            <div class="qr-generator">
+                <h2 class="section-title">ตั้งค่า QR Code</h2>
+                
+                <div class="form-group">
+                    <label for="text">ข้อความหรือ URL:</label>
+                    <input type="text" id="text" placeholder="กรอกข้อความหรือ URL ที่ต้องการสร้าง QR Code">
+                </div>
+                
+                <div class="form-group">
+                    <label for="size">ขนาด:</label>
+                    <select id="size">
+                        <option value="128">128x128</option>
+                        <option value="256">256x256</option>
+                        <option value="350" selected>350x350</option>
+                        <option value="512">512x512</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="margin">ระยะขอบ:</label>
+                    <input type="number" id="margin" value="1" min="0" max="5">
+                </div>
+                
+                <div class="form-group">
+                    <label for="dark">สี QR Code:</label>
+                    <div class="color-picker">
+                        <input type="color" id="dark-color" value="#000000">
+                        <input type="text" id="dark" value="#000000">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="light">สีพื้นหลัง:</label>
+                    <div class="color-picker">
+                        <input type="color" id="light-color" value="#ffffff">
+                        <input type="text" id="light" value="#ffffff">
+                    </div>
+                </div>
+                
+                <button id="generate-btn" class="btn">
+                    <i class="fas fa-qrcode btn-icon"></i>สร้าง QR Code
+                </button>
+            </div>
+            
+            <div class="qr-display">
+                <h2 class="section-title">QR Code ของคุณ</h2>
+                <div id="qrcode"></div>
+                <div id="no-qr-message" class="no-qr-message">กรุณากรอกข้อความและคลิกที่ปุ่ม "สร้าง QR Code"</div>
+                <div class="buttons" style="display: none;" id="action-buttons">
+                    <button id="download-btn" class="btn btn-secondary">
+                        <i class="fas fa-download btn-icon"></i>ดาวน์โหลด
+                    </button>
+                    <button id="copy-data-url-btn" class="btn btn-accent">
+                        <i class="fas fa-copy btn-icon"></i>คัดลอก Data URL
+                    </button>
+                </div>
+                <div id="copy-success" class="success-message">คัดลอกสำเร็จ!</div>
+            </div>
+            
+            <div class="api-info">
+                <div class="tabs">
+                    <div class="tab active" data-tab="url-api">URL API สำหรับ AppSheet</div>
+                    <div class="tab" data-tab="data-url">Data URL สำหรับ AppSheet</div>
+                    <div class="tab" data-tab="usage">วิธีใช้งาน</div>
+                </div>
+                
+                <div class="tab-content active" id="url-api">
+                    <h3>URL API สำหรับ AppSheet</h3>
+                    <p>ใช้ URL นี้ในคอลัมน์ QR CODE ของ AppSheet โดยแทนที่ [Row ID] ด้วยค่าที่ต้องการ:</p>
+                    <div class="api-url">
+                        <code id="api-url-example">https://aase7en.github.io/qr-code-generator/?text=[Row ID]</code>
+                        <button class="copy-btn" data-target="api-url-example">
+                            <i class="fas fa-copy"></i> คัดลอก
+                        </button>
+                    </div>
+                    <p>สามารถเพิ่มพารามิเตอร์เพื่อปรับแต่ง QR Code เพิ่มเติมได้:</p>
+                    <div class="api-url">
+                        <code id="api-url-full">https://aase7en.github.io/qr-code-generator/?text=[Row ID]&size=350&margin=1&dark=%23000000&light=%23FFFFFF</code>
+                        <button class="copy-btn" data-target="api-url-full">
+                            <i class="fas fa-copy"></i> คัดลอก
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="data-url">
+                    <h3>Data URL สำหรับนำไปใช้โดยตรง</h3>
+                    <p>คุณสามารถใช้ Data URL นี้เพื่อแสดง QR Code โดยตรงโดยไม่ต้องเรียกผ่าน API:</p>
+                    <div class="api-url">
+                        <code id="data-url-output">(สร้าง QR Code ก่อนเพื่อดู Data URL)</code>
+                        <button class="copy-btn" data-target="data-url-output" style="display: none;">
+                            <i class="fas fa-copy"></i> คัดลอก
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="usage">
+                    <h3>วิธีใช้งานร่วมกับ AppSheet</h3>
+                    <p>1. เปิด AppSheet และไปที่คอลัมน์ QR CODE ที่ต้องการตั้งค่า</p>
+                    <p>2. ตั้งค่า Type เป็น Image</p>
+                    <p>3. คลิกที่ Expression Assistant (ไอคอนเครื่องหมายเท่ากับ)</p>
+                    <p>4. ใส่ Formula ต่อไปนี้:</p>
+                    
+                    <div class="code-block">
+                        "https://aase7en.github.io/qr-code-generator/?text=" & [Row ID]
+                    </div>
+                    
+                    <p>5. คลิก Save</p>
+                    
+                    <h3>ตัวอย่างการตั้งค่าพารามิเตอร์เพิ่มเติม</h3>
+                    <div class="code-block">
+                        "https://aase7en.github.io/qr-code-generator/?text=" & [Row ID] & "&size=400&dark=%23FF0000"
+                    </div>
+                    <p>ตัวอย่างนี้จะสร้าง QR Code ขนาด 400x400 พิกเซล และใช้สีแดง (#FF0000)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>พัฒนาโดย <a href="https://github.com/aase7en" target="_blank">aase7en</a> | <a href="https://github.com/aase7en/qr-code-generator" target="_blank">ดูโค้ดบน GitHub</a></p>
+            <p>QR Code Generator สำหรับ AppSheet © 2025</p>
+        </div>
+    </div>
+    
     <script>
+        // สำหรับตรวจสอบว่าเป็นโหมด API หรือไม่
+        function isApiMode() {
+            return window.location.search.indexOf('text=') !== -1;
+        }
+        
         // ฟังก์ชันสำหรับอ่านค่าพารามิเตอร์จาก URL
         function getUrlParameter(name) {
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -30,17 +511,15 @@
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
-
-        // อ่านค่าพารามิเตอร์ต่างๆ จาก URL
-        const text = getUrlParameter('text');
-        const size = parseInt(getUrlParameter('size')) || 350;
-        const margin = parseInt(getUrlParameter('margin')) || 1;
-        const dark = getUrlParameter('dark') || '#000000';
-        const light = getUrlParameter('light') || '#ffffff';
         
-        // ถ้ามีการระบุข้อความ ให้สร้าง QR Code
-        if (text) {
-            new QRCode(document.getElementById("qrcode"), {
+        // ฟังก์ชันสำหรับการสร้าง QR Code
+        function generateQRCode(text, size, margin, dark, light) {
+            // ล้างค่าเดิม
+            const qrcodeDiv = document.getElementById("qrcode");
+            qrcodeDiv.innerHTML = '';
+            
+            // สร้าง QR Code ใหม่
+            new QRCode(qrcodeDiv, {
                 text: text,
                 width: size,
                 height: size,
@@ -49,7 +528,162 @@
                 correctLevel: QRCode.CorrectLevel.H,
                 margin: margin
             });
+            
+            // ซ่อนข้อความว่าไม่มี QR Code
+            document.getElementById("no-qr-message").style.display = "none";
+            
+            // แสดงปุ่มดำเนินการ
+            document.getElementById("action-buttons").style.display = "flex";
+            
+            // อัปเดต Data URL สำหรับ tab ที่ 2
+            setTimeout(updateDataUrl, 100);
         }
+        
+        // ฟังก์ชันสำหรับอัปเดต Data URL
+        function updateDataUrl() {
+            const canvas = document.querySelector("#qrcode canvas");
+            if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                const dataUrlOutput = document.getElementById("data-url-output");
+                dataUrlOutput.textContent = dataUrl;
+                document.querySelector('#data-url .copy-btn').style.display = "block";
+            }
+        }
+        
+        // ฟังก์ชันสำหรับการดาวน์โหลด QR Code
+        function downloadQRCode() {
+            const canvas = document.querySelector("#qrcode canvas");
+            if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                const text = document.getElementById("text").value.trim();
+                const sanitizedText = text.substring(0, 10).replace(/[^a-z0-9]/gi, '_');
+                
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `qrcode_${sanitizedText || 'image'}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+        
+        // เมื่อหน้าเว็บโหลดเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            // ตรวจสอบว่าเป็นโหมด API หรือไม่
+            if (isApiMode()) {
+                document.body.classList.add('api-mode');
+                document.querySelector('.api-mode-notice').style.display = 'block';
+                
+                // อ่านค่าพารามิเตอร์ต่างๆ จาก URL
+                const text = getUrlParameter('text');
+                const size = parseInt(getUrlParameter('size')) || 350;
+                const margin = parseInt(getUrlParameter('margin')) || 1;
+                const dark = getUrlParameter('dark') || '#000000';
+                const light = getUrlParameter('light') || '#ffffff';
+                
+                // ถ้ามีการระบุข้อความ ให้สร้าง QR Code
+                if (text) {
+                    generateQRCode(text, size, margin, dark, light);
+                }
+            } else {
+                // เชื่อมต่อ event listeners สำหรับโหมดเว็บปกติ
+                
+                // เชื่อมต่อ color picker กับ input text
+                document.getElementById('dark-color').addEventListener('input', function() {
+                    document.getElementById('dark').value = this.value;
+                });
+                
+                document.getElementById('dark').addEventListener('input', function() {
+                    document.getElementById('dark-color').value = this.value;
+                });
+                
+                document.getElementById('light-color').addEventListener('input', function() {
+                    document.getElementById('light').value = this.value;
+                });
+                
+                document.getElementById('light').addEventListener('input', function() {
+                    document.getElementById('light-color').value = this.value;
+                });
+                
+                // ปุ่มสร้าง QR Code
+                document.getElementById('generate-btn').addEventListener('click', function() {
+                    const text = document.getElementById('text').value.trim();
+                    if (!text) {
+                        alert('กรุณากรอกข้อความหรือ URL');
+                        return;
+                    }
+                    
+                    const size = parseInt(document.getElementById('size').value);
+                    const margin = parseInt(document.getElementById('margin').value);
+                    const dark = document.getElementById('dark').value;
+                    const light = document.getElementById('light').value;
+                    
+                    generateQRCode(text, size, margin, dark, light);
+                    
+                    // อัปเดต API URL example
+                    document.getElementById('api-url-example').textContent = 
+                        `https://aase7en.github.io/qr-code-generator/?text=[Row ID]`;
+                        
+                    document.getElementById('api-url-full').textContent = 
+                        `https://aase7en.github.io/qr-code-generator/?text=[Row ID]&size=${size}&margin=${margin}&dark=${encodeURIComponent(dark)}&light=${encodeURIComponent(light)}`;
+                });
+                
+                // ปุ่มดาวน์โหลด QR Code
+                document.getElementById('download-btn').addEventListener('click', downloadQRCode);
+                
+                // ปุ่มคัดลอก Data URL
+                document.getElementById('copy-data-url-btn').addEventListener('click', function() {
+                    const canvas = document.querySelector("#qrcode canvas");
+                    if (canvas) {
+                        const dataUrl = canvas.toDataURL('image/png');
+                        navigator.clipboard.writeText(dataUrl).then(function() {
+                            const copySuccess = document.getElementById('copy-success');
+                            copySuccess.style.display = 'block';
+                            setTimeout(function() {
+                                copySuccess.style.display = 'none';
+                            }, 2000);
+                        });
+                    }
+                });
+                
+                // Tab switching
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Remove active class from all tabs
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        // Add active class to clicked tab
+                        this.classList.add('active');
+                        
+                        // Hide all tab contents
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        
+                        // Show the corresponding tab content
+                        const tabId = this.getAttribute('data-tab');
+                        document.getElementById(tabId).classList.add('active');
+                    });
+                });
+                
+                // Copy buttons functionality
+                document.querySelectorAll('.copy-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const targetId = this.getAttribute('data-target');
+                        const text = document.getElementById(targetId).textContent;
+                        
+                        navigator.clipboard.writeText(text).then(() => {
+                            // ให้ feedback ว่าคัดลอกสำเร็จ
+                            const originalText = this.innerHTML;
+                            this.innerHTML = '<i class="fas fa-check"></i> คัดลอกแล้ว';
+                            
+                            setTimeout(() => {
+                                this.innerHTML = originalText;
+                            }, 2000);
+                        });
+                    });
+                });
+            }
+        });
     </script>
 </body>
 </html>
