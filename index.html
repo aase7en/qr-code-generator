@@ -536,7 +536,7 @@
     </div>
     
     <script>
-        // สำหรับตรวจสอบว่าเป็นโหมด API หรือไม่
+       // สำหรับตรวจสอบว่าเป็นโหมด API หรือไม่
         function isApiMode() {
             return window.location.search.indexOf('text=') !== -1;
         }
@@ -616,11 +616,6 @@
             if (isApiMode()) {
                 console.log("กำลังทำงานในโหมด API");
                 
-                document.body.classList.add('api-mode');
-                //document.querySelector('.api-notice').style.display = 'block';
-                document.getElementById('api-mode-container').style.display = 'flex';
-                document.querySelector('.container').style.display = 'none';
-                
                 // อ่านค่าพารามิเตอร์ต่างๆ จาก URL
                 const text = getUrlParameter('text');
                 const size = parseInt(getUrlParameter('size')) || 350;
@@ -630,19 +625,48 @@
                 
                 console.log("ข้อมูลที่ได้รับ:", {text, size, margin, dark, light});
                 
-                // ถ้ามีการระบุข้อความที่ไม่ใช่ [Row ID] ให้สร้าง QR Code
-                if (text && text !== '[Row ID]') {
-                    try {
-                        generateQRCode(text, size, margin, dark, light, "qrcode-api");
-                    } catch (error) {
-                        console.error("เกิดข้อผิดพลาดในการสร้าง QR Code:", error);
-                        document.getElementById('error-container').style.display = 'block';
-                    }
+                if (text) {
+                    // ล้าง HTML ทั้งหมด เพื่อให้แสดงเฉพาะรูปภาพ
+                    document.body.innerHTML = '';
+                    document.body.style.margin = '0';
+                    document.body.style.padding = '0';
+                    document.body.style.background = 'transparent';
+                    
+                    // สร้าง canvas ใหม่
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    document.body.appendChild(canvas);
+                    
+                    // สร้าง QR code บน canvas
+                    const qrcode = new QRCode(canvas, {
+                        text: text,
+                        width: size,
+                        height: size,
+                        colorDark: dark,
+                        colorLight: light,
+                        correctLevel: QRCode.CorrectLevel.H,
+                        margin: margin
+                    });
+                    
+                    // แปลง canvas เป็นรูปภาพและแสดงเท่านั้น
+                    setTimeout(function() {
+                        const img = document.querySelector('canvas');
+                        if (img) {
+                            document.body.innerHTML = '';
+                            const pngImage = document.createElement('img');
+                            pngImage.src = img.toDataURL('image/png');
+                            pngImage.style.display = 'block';
+                            document.body.appendChild(pngImage);
+                        }
+                    }, 100);
                 } else {
-                    // ไม่มีข้อความหรือเป็น [Row ID] แสดงข้อความแจ้งเตือน
-                    console.log("ไม่พบข้อความสำหรับสร้าง QR Code");
-                    document.getElementById('error-container').style.display = 'block';
+                    // กรณีไม่มีข้อความ
+                    document.body.innerHTML = '<div style="color:red;text-align:center;padding:20px;">ไม่พบข้อความสำหรับสร้าง QR Code</div>';
                 }
+                
+                // ป้องกันการทำงานของส่วนอื่น
+                return;
             } else {
                 console.log("กำลังทำงานในโหมดเว็บปกติ");
                 
